@@ -32,13 +32,29 @@ func NewMeta(dirpath string) (*Meta, error) {
 		if err != nil {
 			return nil, err
 		}
+		// fmt.Printf("%+v\n", m)
 		return m, nil
 	}
-	m := &Meta{ActiveFid: time.Now().UnixNano(), OlderFids: make([]int64, 0), IndexValid: defaultIndexValid}
+
+	m := &Meta{Dirpath: dirpath, ActiveFid: time.Now().UnixNano(), OlderFids: make([]int64, 0), IndexValid: defaultIndexValid}
+	// init data directory structure
+	datadirectory := filepath.Join(dirpath, defaultFileDirName)
+	ok, err = IsExist(fp)
+	if err != nil {
+		return nil, err
+	}
+	if !ok {
+		err = os.Mkdir(datadirectory, 0755)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	err = m.Save()
 	if err != nil {
 		return nil, err
 	}
+
 	return m, nil
 }
 
@@ -69,10 +85,6 @@ func (m *Meta) GetFids() []int64 {
 
 func IsExist(fp string) (bool, error) {
 	_, err := os.Stat(fp)
-	if err == nil {
-		return true, nil
-	}
-
 	if os.IsNotExist(err) {
 		return false, nil
 	}
@@ -88,4 +100,14 @@ func (m *Meta) DeleteFids(fid int64) {
 		newOlderMid = append(newOlderMid, id)
 	}
 	m.OlderFids = newOlderMid
+}
+
+// *---------- test method --------- //
+
+func (m *Meta) AddOldFid(fid int64) {
+	m.OlderFids = append(m.OlderFids, fid)
+}
+
+func (m *Meta) SetActiveFid(fid int64) {
+	m.ActiveFid = fid
 }
