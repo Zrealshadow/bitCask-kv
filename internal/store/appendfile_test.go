@@ -31,13 +31,13 @@ func TestBasicAppendFile(t *testing.T) {
 	_, err = os.Stat(af.fp)
 
 	if os.IsNotExist(err) {
-		t.Errorf("appendfile %s created failed in NewAppendiFile Function", af.fp)
+		t.Fatalf("appendfile %s created failed in NewAppendiFile Function", af.fp)
 	}
 
 	for _, kv := range kvs {
 		offset, err := af.Write([]byte(kv.record))
 		if err != nil {
-			t.Error(err.Error())
+			t.Fatal(err.Error())
 		}
 		kv.offset = offset
 	}
@@ -47,17 +47,17 @@ func TestBasicAppendFile(t *testing.T) {
 		n, err := af.Read(kv.offset, b)
 
 		if err != nil {
-			t.Error(err.Error())
+			t.Fatal(err.Error())
 		}
 
 		if n != len(kv.record) {
-			t.Errorf("[id:%d record %s] Error Read bytes Want Read %d bytes , but got %d bytes", idx, kv.record, len(kv.record), n)
+			t.Fatalf("[id:%d record %s] Error Read bytes Want Read %d bytes , but got %d bytes", idx, kv.record, len(kv.record), n)
 		}
 
 		r := string(b)
 
 		if r != kv.record {
-			t.Errorf("[id:%d example] Error Read want %s got %s", idx, kv.record, r)
+			t.Fatalf("[id:%d example] Error Read want %s got %s", idx, kv.record, r)
 		}
 	}
 

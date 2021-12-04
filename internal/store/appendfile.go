@@ -38,16 +38,17 @@ func NewAppendFile(dir string, role FileRole, fid int64) (*appendFile, error) {
 	var err error
 
 	if role == ACTIVE {
+
 		af.fo, err = os.OpenFile(af.fp, os.O_RDWR|os.O_APPEND|os.O_CREATE, 0644)
-
 		if err != nil {
 			return nil, err
 		}
-
 		af.offset, err = af.Size()
+
 		if err != nil {
 			return nil, err
 		}
+
 		return af, nil
 	}
 

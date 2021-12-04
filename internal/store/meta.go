@@ -43,6 +43,7 @@ func NewMeta(dirpath string) (*Meta, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	if !ok {
 		err = os.Mkdir(datadirectory, 0755)
 		if err != nil {

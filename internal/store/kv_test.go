@@ -18,15 +18,14 @@ func TestBasicRecord(t *testing.T) {
 		{"5", "C"},
 		{"6", "Javascript"},
 	}
-
 	for _, kv := range kvs {
 		r, err := NewRecord([]byte(kv.key), []byte(kv.value))
 		if err != nil {
-			t.Error(err.Error())
+			t.Fatal(err.Error())
 		}
 
 		if r.KeySize != uint8(len(kv.key)) || r.ValueSize != uint32(len(kv.value)) {
-			t.Errorf("Size is not same in Record k,v: %d %d\t origin %d %d", r.KeySize, r.ValueSize, len(kv.key), len(kv.value))
+			t.Fatalf("Size is not same in Record k,v: %d %d\t origin %d %d", r.KeySize, r.ValueSize, len(kv.key), len(kv.value))
 		}
 
 		b := encodeRecord(r)
@@ -35,7 +34,7 @@ func TestBasicRecord(t *testing.T) {
 		drh, _ := decodeRecordHeader(b)
 
 		if dr.Crc != r.Crc {
-			t.Errorf("Checksum ruined in encoding - decoding process, origin : %d, Got :%d", r.Crc, dr.Crc)
+			t.Fatalf("Checksum ruined in encoding - decoding process, origin : %d, Got :%d", r.Crc, dr.Crc)
 		}
 		CheckStr(t, string(dr.Key), kv.key, "Key")
 		CheckStr(t, string(dr.Value), kv.value, "Value")
@@ -43,7 +42,7 @@ func TestBasicRecord(t *testing.T) {
 		CheckInt32(t, uint32(dr.ValueSize), r.ValueSize, "ValueSize")
 
 		if drh.Crc != r.Crc {
-			t.Errorf("Checksum ruined in encoding - decoding head process, origin : %d, Got :%d", r.Crc, drh.Crc)
+			t.Fatalf("Checksum ruined in encoding - decoding head process, origin : %d, Got :%d", r.Crc, drh.Crc)
 		}
 
 		CheckInt32(t, uint32(drh.KeySize), uint32(r.KeySize), "RecordHead KeySize")
@@ -53,12 +52,12 @@ func TestBasicRecord(t *testing.T) {
 
 func CheckStr(t *testing.T, get string, want string, desc string) {
 	if get != want {
-		t.Errorf("Get %s Want %s in Field %s Compare", get, want, desc)
+		t.Fatalf("Get %s Want %s in Field %s Compare", get, want, desc)
 	}
 }
 
 func CheckInt32(t *testing.T, get uint32, want uint32, desc string) {
 	if get != want {
-		t.Errorf("Get %d Want %d in Field %s Compare", get, want, desc)
+		t.Fatalf("Get %d Want %d in Field %s Compare", get, want, desc)
 	}
 }

@@ -70,5 +70,5 @@ func setupMetaTest() {
 }
 
 func teardownMetaTest() {
-	// os.RemoveAll(datadir)
+	os.RemoveAll(datadir)
 }

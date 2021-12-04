@@ -23,24 +23,30 @@ type FileManager struct {
 	afmap *sync.Map // record fid -> open file handler
 
 	mu sync.Mutex
-	// index
+	// this mux is to protect active file is not change when concurrent write
+	// File Write is concurrent safe, but we have to protect the file target is same
+
 }
 
 func NewFileManager(m *Meta) (*FileManager, error) {
 	mf := &FileManager{meta: m, dcnt: &sync.Map{}, index: &sync.Map{}, afmap: &sync.Map{}}
-	mf.Load()
+	err := mf.Load()
+	if err != nil {
+		return nil, err
+	}
+	go mf.MergeMoniter()
 	return mf, nil
 }
 
 func (fm *FileManager) Load() error {
 	t := time.Now()
-	log.Printf("[%v] Start to Load Meta data of FileManager", t)
+	log.Printf("[%v] Start to Load Meta data of FileManager\n", t)
 	err := fm.loadMeta()
 	if err != nil {
 		return err
 	}
 	d := time.Since(t)
-	log.Printf("[%v] Finish to load Meta data of FileManager, Spend %v ", time.Now(), d)
+	log.Printf("[%v] Finish to load Meta data of FileManager, Spend %v \n", time.Now(), d)
 
 	t = time.Now()
 	if fm.meta.IndexValid {
@@ -52,7 +58,7 @@ func (fm *FileManager) Load() error {
 		d := time.Since(t)
 		log.Printf("[%v] Finish to Load Index data of FileManager, Spend %v", time.Now(), d)
 	} else {
-		log.Printf("[%v] Start to Scan all data to generate index map", t)
+		log.Printf("[%v] Start to Scan all data to generate index map\n", t)
 		/*
 			pass all file according to time order and load in index map
 		*/
@@ -62,17 +68,17 @@ func (fm *FileManager) Load() error {
 			if ok {
 				err := fm.loadAppendFile(af.(*appendFile))
 				if err != nil {
-					log.Printf("Failed to Load index in fid : %d ", fid)
+					log.Printf("Failed to Load index in fid : %d \n: err: %v", fm.meta.ActiveFid, err)
 				}
 			}
 		}
 		af, _ := fm.GetAF()
 		err := fm.loadAppendFile(af)
 		if err != nil {
-			log.Printf("Failed to Load index in fid : %d ", fm.meta.ActiveFid)
+			log.Printf("Failed to Load index in fid : %d \n: err: %v", fm.meta.ActiveFid, err)
 		}
 		d := time.Since(t)
-		log.Printf("[%v] Finish to Load Index data of FileManager, Spend %v", time.Now(), d)
+		log.Printf("[%v] Finish to Load Index data of FileManager, Spend %v\n", time.Now(), d)
 	}
 	return nil
 }
@@ -94,10 +100,12 @@ func (fm *FileManager) loadMeta() error {
 	}
 
 	// load active files
+
 	handler, err := NewAppendFile(datadir, ACTIVE, fm.meta.ActiveFid)
 	if err != nil {
 		return err
 	}
+
 	fm.afmap.Store(handler.fid, handler)
 	return nil
 }
@@ -125,12 +133,11 @@ func (fm *FileManager) loadAppendFile(af *appendFile) error {
 	n := 0
 	for {
 		n, err = af.Read(off, b)
-		if err != nil {
-			return err
-		} else if err == io.EOF {
+		if err == io.EOF {
 			return nil
+		} else if err != nil {
+			return err
 		}
-
 		if n < 9 {
 			return nil
 		}
@@ -258,6 +265,10 @@ func (fm *FileManager) Write(k []byte, v []byte) error {
 	}
 
 	b := encodeRecord(kv)
+
+	fm.mu.Lock()
+	defer fm.mu.Unlock()
+
 	af, err := fm.GetAF()
 	if err != nil {
 		return err
@@ -274,7 +285,8 @@ func (fm *FileManager) Write(k []byte, v []byte) error {
 	if activefilesize+int64(len(b)) > MaxAppendFileSize {
 		// create new active file
 		af.SetOlder()
-		new_af, err := NewAppendFile(fm.meta.Dirpath, ACTIVE, time.Now().UnixNano())
+		d := filepath.Join(fm.meta.Dirpath, defaultFileDirName)
+		new_af, err := NewAppendFile(d, ACTIVE, time.Now().UnixNano())
 		if err != nil {
 			return err
 		}
@@ -296,9 +308,9 @@ func (fm *FileManager) Write(k []byte, v []byte) error {
 	if itptr, ok := fm.index.Load(string(kv.Key)); ok {
 		item := itptr.(*Item)
 		if c, ok := fm.dcnt.Load(item.fid); !ok {
-			fm.dcnt.Store(item.fid, 0)
+			fm.dcnt.Store(item.fid, uint32(0))
 		} else {
-			fm.dcnt.Store(item.fid, c.(int)+1)
+			fm.dcnt.Store(item.fid, c.(uint32)+1)
 		}
 	}
 	// fm.index[string(k)] = &Item{
@@ -395,7 +407,8 @@ func (fm *FileManager) Merge(af *appendFile) error {
 		if err != nil {
 			return err
 		}
-		itptr, ok := fm.index.Load(kv.Key)
+
+		itptr, ok := fm.index.Load(string(kv.Key))
 		it := itptr.(*Item)
 		if ok {
 			if af.fid == it.fid && off == it.offset && it.size == uint32(s) {
@@ -419,11 +432,18 @@ func (fm *FileManager) Merge(af *appendFile) error {
 
 func (fm *FileManager) MergeMoniter() {
 	// every 1 minute , we will check weather is there any file have to be merged
-	for range time.Tick(time.Minute) {
+	var d time.Duration
 
+	if !Debug {
+		d = time.Minute
+	} else {
+		d = time.Second * 5
+	}
+
+	for range time.Tick(d) {
 		fm.dcnt.Range(func(fid, value interface{}) bool {
-			cnt := value.(*uint32)
-			if *cnt <= MaxDuplicatedIten {
+			cnt := value.(uint32)
+			if cnt <= MaxDuplicatedIten {
 				return true
 			}
 
@@ -479,4 +499,10 @@ func (fm *FileManager) Remove(af *appendFile) {
 	fm.meta.Save()
 	// rm this file in os filesystem
 	os.Remove(af.fp)
+}
+
+//--------------- Some helper Function for Unit Test ------------/
+
+func (fm *FileManager) GetActiveFid() int64 {
+	return fm.meta.ActiveFid
 }
