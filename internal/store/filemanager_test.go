@@ -122,6 +122,7 @@ func TestMergeFileManager(t *testing.T) {
 			t.Fatalf("key %s Want V %s Got V %s\n", k, v, gotv_)
 		}
 	}
+	fm.Close()
 
 }
 
@@ -164,11 +165,57 @@ func TestConcurrentReadAndWriteFileManager(t *testing.T) {
 		}(i, fm)
 	}
 	wg.Wait()
+	fm.Close()
 }
+
+func TestReconnectToFileManager(t *testing.T) {
+	SetupFileManager()
+	defer teardownMetaTest()
+
+	meta, err := NewMeta(datadir)
+	if err != nil {
+		t.Fatalf("Create Meta file Error : Err: %v", err)
+	}
+
+	fm, err := NewFileManager(meta)
+	if err != nil {
+		t.Fatalf("Create FileManager Error: Err: %v", err)
+	}
+
+	// we insert many key-value
+	klist := make([]string, 0)
+	for i := 0; i < 100000; i++ {
+		klist = append(klist, fmt.Sprint(i))
+		fm.Write([]byte(klist[i]), []byte(klist[i]))
+	}
+	// Close the FM
+	fm.Close()
+
+	// now we re-declare it
+	meta_, err := NewMeta(datadir)
+	if err != nil {
+		t.Fatalf("Retry Create Meta file Error : Err: %v", err)
+	}
+
+	fm_, err := NewFileManager(meta_)
+	if err != nil {
+		t.Fatalf("Retry Create FileManager Error: Err: %v", err)
+	}
+
+	// check last inserted record
+	for _, key := range klist {
+		v, _ := fm_.Read([]byte(key))
+		value := string(v)
+		if value != key {
+			t.Fatalf("ReStart FM but failed to get correct k-v Key %s Want %s Got %s", key, key, value)
+		}
+	}
+}
+
 func SetupFileManager() {
 	os.MkdirAll(datadir, 0755)
 }
 
 func TearDownFileManager() {
-	// os.RemoveAll(datadir)
+	os.RemoveAll(datadir)
 }

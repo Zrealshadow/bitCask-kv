@@ -25,11 +25,11 @@ type FileManager struct {
 	mu sync.Mutex
 	// this mux is to protect active file is not change when concurrent write
 	// File Write is concurrent safe, but we have to protect the file target is same
-
+	done chan struct{}
 }
 
 func NewFileManager(m *Meta) (*FileManager, error) {
-	mf := &FileManager{meta: m, dcnt: &sync.Map{}, index: &sync.Map{}, afmap: &sync.Map{}}
+	mf := &FileManager{meta: m, dcnt: &sync.Map{}, index: &sync.Map{}, afmap: &sync.Map{}, done: make(chan struct{})}
 	err := mf.Load()
 	if err != nil {
 		return nil, err
@@ -439,36 +439,43 @@ func (fm *FileManager) MergeMoniter() {
 	} else {
 		d = time.Second * 5
 	}
+	ticker := time.NewTicker(d)
+	defer ticker.Stop()
 
-	for range time.Tick(d) {
-		fm.dcnt.Range(func(fid, value interface{}) bool {
-			cnt := value.(uint32)
-			if cnt <= MaxDuplicatedIten {
+	for {
+		select {
+
+		case <-fm.done:
+			break
+		case <-ticker.C:
+			fm.dcnt.Range(func(fid, value interface{}) bool {
+				cnt := value.(uint32)
+				if cnt <= MaxDuplicatedIten {
+					return true
+				}
+
+				// find appendfile
+				af, ok := fm.afmap.Load(fid)
+				if !ok {
+					return true
+				}
+
+				if af.(*appendFile).GetRole() == ACTIVE {
+					// no need to merge active file
+					return true
+				}
+
+				err := fm.Merge(af.(*appendFile))
+				if err != nil {
+					log.Printf("fid %d merge failure , err = %v\n", fid, err)
+				} else {
+					// remove this file and update meta file
+					fm.Remove(af.(*appendFile))
+					log.Printf("fid = %d merge success \n", fid)
+				}
 				return true
-			}
-
-			// find appendfile
-			af, ok := fm.afmap.Load(fid)
-			if !ok {
-				return true
-			}
-
-			if af.(*appendFile).GetRole() == ACTIVE {
-				// no need to merge active file
-				return true
-			}
-
-			err := fm.Merge(af.(*appendFile))
-			if err != nil {
-				log.Printf("fid %d merge failure , err = %v\n", fid, err)
-			} else {
-				// remove this file and update meta file
-				fm.Remove(af.(*appendFile))
-				log.Printf("fid = %d merge success \n", fid)
-			}
-			return true
-		})
-
+			})
+		}
 	}
 }
 
@@ -499,6 +506,20 @@ func (fm *FileManager) Remove(af *appendFile) {
 	fm.meta.Save()
 	// rm this file in os filesystem
 	os.Remove(af.fp)
+}
+
+func (fm *FileManager) Close() {
+	fm.mu.Lock()
+	defer fm.mu.Unlock()
+	fm.done <- struct{}{}
+	close(fm.done)
+
+	// close all appendfile handler
+	fm.afmap.Range(func(key, value interface{}) bool {
+		af := value.(*appendFile)
+		af.Close()
+		return true
+	})
 }
 
 //--------------- Some helper Function for Unit Test ------------/
