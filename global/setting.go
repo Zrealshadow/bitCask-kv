@@ -1,7 +1,15 @@
 package global
 
-import "github.com/bitCaskKV/pkg/setting"
+import (
+	bc "github.com/bitCaskKV/bitCask"
+	"github.com/bitCaskKV/pkg/logger"
+	"github.com/bitCaskKV/pkg/setting"
+)
 
 var (
-	ServerSettingS *setting.ServerSettingS
+	ServerSetting        *setting.ServerSettingS
+	BitCaskSetting       *setting.BitCaskSettingS
+	Logger               *logger.Logger
+	LoggerSetting        *setting.LoggerSettingS
+	DefaultBitCaskEngine *bc.BitCaskEngine
 )
