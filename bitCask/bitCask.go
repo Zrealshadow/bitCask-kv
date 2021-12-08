@@ -18,7 +18,7 @@ type BitCaskEngine struct {
 func NewBitCaskEngine(MountDir string) (*BitCaskEngine, error) {
 	_, err := os.Stat(MountDir)
 	engine := &BitCaskEngine{
-		blockMap: map[string]*BitCaskBlock{},
+		blockMap: make(map[string]*BitCaskBlock),
 		MountDir: MountDir,
 	}
 	if os.IsNotExist(err) {
