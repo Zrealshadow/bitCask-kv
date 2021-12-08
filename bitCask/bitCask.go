@@ -7,7 +7,7 @@ import (
 	"os"
 	"strings"
 
-	store "github.com/bitCaskKV/bitCask/internal/store"
+	store "github.com/bitCaskKV/bitCask/store"
 )
 
 type BitCaskEngine struct {
@@ -15,14 +15,15 @@ type BitCaskEngine struct {
 	MountDir string
 }
 
-func NewBitCaskEngine(MountDir string) *BitCaskEngine {
+func NewBitCaskEngine(MountDir string) (*BitCaskEngine, error) {
 	_, err := os.Stat(MountDir)
 	engine := &BitCaskEngine{
 		blockMap: map[string]*BitCaskBlock{},
 		MountDir: MountDir,
 	}
 	if os.IsNotExist(err) {
-		return engine
+		os.MkdirAll(MountDir, 0755)
+		return engine, nil
 	}
 
 	// Load exist Mount DB
@@ -31,14 +32,21 @@ func NewBitCaskEngine(MountDir string) *BitCaskEngine {
 		path := MountDir + string(os.PathSeparator) + fm.Name()
 		engine.blockMap[fm.Name()] = NewBitCaskBlock(path)
 	}
-	return engine
+	return engine, nil
 }
 
-func (e *BitCaskEngine) NewBlock(blockName string) {
+func (e *BitCaskEngine) NewBlock(blockName string) error {
 	if _, ok := e.blockMap[blockName]; !ok {
 		path := e.MountDir + string(os.PathSeparator) + blockName
+
+		// create Block Dir
+		os.MkdirAll(path, 0755)
 		e.blockMap[blockName] = NewBitCaskBlock(path)
+		return nil
 	}
+
+	return errors.New(fmt.Sprintf("Block %s exist", blockName))
+
 }
 
 func (e *BitCaskEngine) Get(BlockName string, Key []byte) ([]byte, error) {
@@ -77,6 +85,7 @@ type BitCaskBlock struct {
 func NewBitCaskBlock(path string) *BitCaskBlock {
 	b := &BitCaskBlock{path: path}
 	meta, _ := store.NewMeta(path)
+	// fmt.Printf("%+v, err %s\n", meta, err.Error())
 	fmp, _ := store.NewFileManager(meta)
 	b.FM = fmp
 	return b
