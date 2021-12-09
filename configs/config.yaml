@@ -1,6 +1,15 @@
 Server:
   RunMode: debug
-  HttpPort: 8000
+  # RunMode: release
+  HttpPort: 8080
   ReadTimeout: 60
   WriteTimeout: 60
-  Addr: localhost
+  Addr: "127.0.0.1"
+Logger:
+  FileName: app
+  MaxPageSize: 100
+  DefaultPageSize: 10
+  LogSavePath: storage/logs
+  LogFileExt: .log
+DB:
+  MountDir: storage/DB
