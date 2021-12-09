@@ -35,28 +35,11 @@ func init() {
 	// }
 }
 
+// @title 基于BitCask的K-V储存系统
+// @version 1.0
+// @description 基于BitCask K-V储存系统服务端
+// @termsofService https://github.com/Zrealshadow/bitCask-kv
 func main() {
-	// serverMux := http.NewServeMux()
-	//Get
-	// serverMux.HandleFunc("/v1/db", func(rw http.ResponseWriter, r *http.Request) {
-	// 	// r.Form.Get("Method")
-	// 	method := r.Header.Get("USE")
-	// 	global.Logger.Infof("Get Method %s", method)
-	// 	switch method {
-	// 	case "Put":
-	// 		_, _ = rw.Write([]byte(method))
-	// 	case "Get":
-	// 		_, _ = rw.Write([]byte(method))
-	// 	case "Del":
-	// 		_, _ = rw.Write([]byte(method))
-	// 	default:
-	// 		_, _ = rw.Write([]byte("HelloWorld"))
-	// 	}
-	// })
-	// r := gin.Default()
-	// r.GET("/v1/db", func(c *gin.Context) {
-	// 	c.JSON(200, gin.H{"message": "ok"})
-	// })
 	r := routers.NewRouter()
 	r.Run(global.ServerSetting.Addr + ":" + global.ServerSetting.HttpPort)
 }
