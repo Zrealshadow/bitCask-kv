@@ -1,0 +1,183 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "description": "基于BitCask K-V储存系统服务端",
+        "title": "基于BitCask的K-V储存系统",
+        "termsOfService": "https://github.com/Zrealshadow/bitCask-kv",
+        "contact": {},
+        "license": {},
+        "version": "1.0"
+    },
+    "paths": {
+        "/v1/db/:dbname": {
+            "get": {
+                "description": "Get Key - Value in DB",
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Get Key - Value in DB",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "block name",
+                        "name": "dbname",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Get key",
+                        "name": "key",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "ok\" \"成功",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "err_code：10000001 参数错误\"；",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "err_code：10000000 服务错误 err_code: 10000002 无数据\"；",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Put Key - Value in DB",
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Put Key - Value in DB",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "block name",
+                        "name": "dbname",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "put key",
+                        "name": "key",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "put value",
+                        "name": "dbname",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "ok\" \"成功",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "err_code：10000001 参数错误\"；",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "err_code：10000000 服务错误 err_code: 10000002 无数据\"；",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "Delete Key - Value in DB",
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Delete Key - Value in DB",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "block name",
+                        "name": "dbname",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Get key",
+                        "name": "key",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "ok\" \"成功",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "err_code：10000001 参数错误\"；",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "err_code：10000000 服务错误 err_code: 10000002 无数据\"；",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/dbs": {
+            "post": {
+                "description": "Create DB Block",
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Create DB Block",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "block name",
+                        "name": "dbname",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "ok\" \"成功",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "err_code：10000001 参数错误\"；",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

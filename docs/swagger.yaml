@@ -1,0 +1,123 @@
+info:
+  contact: {}
+  description: 基于BitCask K-V储存系统服务端
+  license: {}
+  termsOfService: https://github.com/Zrealshadow/bitCask-kv
+  title: 基于BitCask的K-V储存系统
+  version: "1.0"
+paths:
+  /v1/db/:dbname:
+    delete:
+      description: Delete Key - Value in DB
+      parameters:
+      - description: block name
+        in: path
+        name: dbname
+        required: true
+        type: string
+      - description: Get key
+        in: query
+        name: key
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ok" "成功
+          schema:
+            type: string
+        "400":
+          description: err_code：10000001 参数错误"；
+          schema:
+            type: string
+        "500":
+          description: 'err_code：10000000 服务错误 err_code: 10000002 无数据"；'
+          schema:
+            type: string
+      summary: Delete Key - Value in DB
+    get:
+      description: Get Key - Value in DB
+      parameters:
+      - description: block name
+        in: path
+        name: dbname
+        required: true
+        type: string
+      - description: Get key
+        in: query
+        name: key
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ok" "成功
+          schema:
+            type: string
+        "400":
+          description: err_code：10000001 参数错误"；
+          schema:
+            type: string
+        "500":
+          description: 'err_code：10000000 服务错误 err_code: 10000002 无数据"；'
+          schema:
+            type: string
+      summary: Get Key - Value in DB
+    post:
+      description: Put Key - Value in DB
+      parameters:
+      - description: block name
+        in: path
+        name: dbname
+        required: true
+        type: string
+      - description: put key
+        in: query
+        name: key
+        required: true
+        type: string
+      - description: put value
+        in: query
+        name: dbname
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ok" "成功
+          schema:
+            type: string
+        "400":
+          description: err_code：10000001 参数错误"；
+          schema:
+            type: string
+        "500":
+          description: 'err_code：10000000 服务错误 err_code: 10000002 无数据"；'
+          schema:
+            type: string
+      summary: Put Key - Value in DB
+  /v1/dbs:
+    post:
+      description: Create DB Block
+      parameters:
+      - description: block name
+        in: query
+        name: dbname
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ok" "成功
+          schema:
+            type: string
+        "400":
+          description: err_code：10000001 参数错误"；
+          schema:
+            type: string
+      summary: Create DB Block
+swagger: "2.0"
