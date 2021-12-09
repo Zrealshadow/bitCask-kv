@@ -9,7 +9,7 @@ Inspired by [Paper](https://riak.com/assets/bitcask-intro.pdf)
 
 
 
-![Design](../../aboutme/FigureHub/bitCaskKV/Design.png)
+![Design](https://raw.githubusercontent.com/Zrealshadow/FigureHub/main/bitCaskKV/Design.png)
 
 
 
