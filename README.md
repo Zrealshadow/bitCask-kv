@@ -1,4 +1,6 @@
 # bitCask-KV
+[![build](https://github.com/Zrealshadow/bitCask-kv/actions/workflows/main.yml/badge.svg)](https://github.com/Zrealshadow/bitCask-kv/actions/workflows/main.yml) [![unittest](https://github.com/Zrealshadow/bitCask-kv/actions/workflows/test.yml/badge.svg)](https://github.com/Zrealshadow/bitCask-kv/actions/workflows/test.yml) ![GitHub code size in bytes](https://img.shields.io/github/languages/code-size/Zrealshadow/bitCask-kv) ![GitHub go.mod Go version](https://img.shields.io/github/go-mod/go-version/Zrealshadow/bitCask-kv) 
+
 Key-Value storage system based on BitCask 
 
 Inspired by [Paper](https://riak.com/assets/bitcask-intro.pdf)
