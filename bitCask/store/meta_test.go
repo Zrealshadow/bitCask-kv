@@ -66,6 +66,7 @@ func TestEmptyMeta(t *testing.T) {
 }
 
 func setupMetaTest() {
+	os.RemoveAll(datadir)
 	os.MkdirAll(datadir, 0755)
 }
 

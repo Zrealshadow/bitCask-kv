@@ -103,7 +103,7 @@ func TestMergeFileManager(t *testing.T) {
 		}
 	}
 
-	time.Sleep(1 * time.Minute)
+	time.Sleep(20 * time.Second)
 
 	files, err := ioutil.ReadDir(datadir)
 
@@ -214,6 +214,7 @@ func TestReconnectToFileManager(t *testing.T) {
 }
 
 func SetupFileManager() {
+	os.RemoveAll(datadir)
 	os.MkdirAll(datadir, 0755)
 }
 
